@@ -15,7 +15,7 @@ const Tab = createBottomTabNavigator();
 
 function TabNavigator() {
   return (
-    <Tab.Navigator  screenOptions={({ route }) => ({
+    <Tab.Navigator screenOptions={({ route }) => ({
       tabBarIcon: ({ focused, color, size }) => {
         let iconName;
         if (route.name === 'Now Playing') {
@@ -23,19 +23,19 @@ function TabNavigator() {
             ? 'md-play-circle'
             : 'md-play-circle-outline';
         } else if (route.name === 'Top Rated') {
-          iconName = focused ?  'ios-star'
-          : 'ios-star-outline';
+          iconName = focused ? 'ios-star'
+            : 'ios-star-outline';
         }
         return <Icon name={iconName} size={20} color={'#000'} />;
       },
     })}
-    tabBarOptions={{
-      activeTintColor: 'black',
-      inactiveTintColor: 'gray',
-      activeBackgroundColor: '#f4b244',
-      inactiveBackgroundColor: '#f4b244'
-    }}>
-      <Tab.Screen name="Now Playing" component={NowPlaying}/>
+      tabBarOptions={{
+        activeTintColor: 'black',
+        inactiveTintColor: 'gray',
+        activeBackgroundColor: '#f4b244',
+        inactiveBackgroundColor: '#f4b244'
+      }}>
+      <Tab.Screen name="Now Playing" component={NowPlaying} />
       <Tab.Screen name="Top Rated" component={TopRated} />
     </Tab.Navigator>
 

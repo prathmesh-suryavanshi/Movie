@@ -6,18 +6,20 @@ import React, { Component } from 'react'
 import { View, FlatList, Text, ActivityIndicator, Image, TouchableOpacity } from 'react-native'
 import { connect } from 'react-redux'
 import * as MoviesActions from '../Redux/Actions/MoviesActions'
-import { SearchBar } from 'react-native-elements';
 import _ from "lodash";
-import { getMovies, contains } from "../Shared/Search";
 import { renderSeparator } from "../Shared/CommonComponents"
 import { styles } from '../Shared/GlobalCSS';
+import SearchInput, { createFilter } from 'react-native-search-filter';
+import Icon from 'react-native-vector-icons/MaterialIcons'
+
+const KEYS_TO_FILTERS = ['original_title'];
 
 class TopRated extends Component {
   //Constructor
   constructor(props) {
     super(props);
     this.state = {
-      query: "",
+      searchTerm: '',
       fullData: this.props.quote,
       movies: this.props.quote,
       isDelete: false
@@ -27,13 +29,15 @@ class TopRated extends Component {
   //ComponentDidMount
   componentDidMount() {
     this.props.loadMovie()
-    this.setState({movies: this.props.quote})
+    this.setState({ movies: this.props.quote })
 
   }
 
   //Render
   render() {
-    if (this.props.statusCode != undefined && this.state.query.length == 0 && this.state.isDelete == false) {
+    var Movies = this.props.quote
+    var filteredMovies = Object.values(Movies).filter(createFilter(this.state.searchTerm, KEYS_TO_FILTERS))
+    if (this.props.statusCode != undefined && this.state.searchTerm.length == 0 && this.state.isDelete == false) {
       return (
         this.props.isloading ? <ActivityIndicator /> : <View style={styles.container}>
           <FlatList
@@ -46,7 +50,20 @@ class TopRated extends Component {
           />
         </View>
       )
-    } else if (this.state.query.length > 0 || this.state.isDelete) {
+    } else if (this.state.searchTerm.length > 0 || this.state.isDelete == false) {
+      return (
+        this.props.isloading ? <ActivityIndicator /> : <View style={styles.container}>
+          <FlatList
+            data={filteredMovies}
+            renderItem={this.renderItem}
+            keyExtractor={(item, index) => String(index)}
+            extraData={this.props}
+            ListHeaderComponent={this.renderHeader}
+            ItemSeparatorComponent={renderSeparator}
+          />
+        </View>
+      )
+    } else if (this.state.isDelete) {
       return (
         this.props.isloading ? <ActivityIndicator /> : <View style={styles.container}>
           <FlatList
@@ -69,13 +86,16 @@ class TopRated extends Component {
 
   //Searchbar header
   renderHeader = () => {
-    return <SearchBar placeholder="Type Here..." lightTheme round
-      inputContainerStyle={styles.inputStyle}
-      containerStyle={styles.containerStyle} onChangeText={this.handleSearch} value={this.state.query} onCancel={this.clearText} />;
+    return <SearchInput
+      onChangeText={(term) => { this.searchUpdated(term) }}
+      style={styles.searchInput}
+      placeholder="Type a keyword to search"
+      inputViewStyles={styles.searchBar}
+      clearIcon={this.state.searchTerm !== '' && <Icon name="clear" />}
+    />
   };
 
   deleteItemById = id => {
-    console.log("here are movie", this.state.movies)
     if (this.state.movies) {
       const filteredData = this.state.movies.filter(item => item.id !== id);
       this.setState({ movies: filteredData });
@@ -83,21 +103,12 @@ class TopRated extends Component {
       const filteredData = this.props.quote.filter(item => item.id !== id);
       this.setState({ movies: filteredData });
     }
-  } 
-
-  //Clear Text
-  clearText = () => {
-    this.setState({ query: '' })
   }
 
   //On Search
-  handleSearch = text => {
-    const formattedQuery = text
-    const data = _.filter(this.props.quote, movie => {
-      return contains(movie, formattedQuery);
-    });
-    this.setState({ query: formattedQuery, data }, () => this.makeRemoteRequest());
-  };
+  searchUpdated(term) {
+    this.setState({ searchTerm: term })
+  }
 
   renderItem = ({ item, index }) => {
     return (
@@ -114,34 +125,15 @@ class TopRated extends Component {
           <View style={styles.headView}>
             <Text numberOfLines={1} style={styles.headingText}>{item.original_title}</Text>
             <Text numberOfLines={5} style={styles.des}>{item.overview}</Text>
-            <TouchableOpacity onPress={() => {this.deleteItemById(item.id), this.setState({isDelete: true})}}>
-            <View style={{backgroundColor:'black', alignSelf:'flex-end', marginEnd:10, marginTop: 10}}>
-              <Text style={{fontSize:14, fontWeight: 'bold', padding:4, color:'#fff'}}>Delete</Text>
-            </View>
+            <TouchableOpacity onPress={() => { this.deleteItemById(item.id), this.setState({ isDelete: true }) }}>
+              <View style={styles.deleteView}>
+                <Text style={styles.deleteText}>Delete</Text>
+              </View>
             </TouchableOpacity>
           </View>
         </View>
       </TouchableOpacity>
     )
-  }
-
-  //Search Request
-  makeRemoteRequest = () => {
-    if (this.state.query.length > 0) {
-      getMovies(this.props.quote, this.state.query)
-        .then(movies => {
-          this.setState({
-            loading: false,
-            movies: movies
-          });
-        })
-        .catch(error => {
-          this.setState({ error, loading: false });
-        });
-    } else {
-      this.props.loadMovie()
-      this.setState({ movies: this.props.quote })
-    }
   }
 }
 
