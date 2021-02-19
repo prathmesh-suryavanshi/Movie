@@ -5,7 +5,8 @@ Description: Search remotely
 import _ from "lodash";
 
 export const contains = ({ original_title }, query) => {    
-    if (original_title.includes(query)) {
+  let title= original_title.toUpperCase()
+    if (title.includes(query.toUpperCase())) {
     return true;
     }
   return false;

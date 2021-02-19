@@ -30,8 +30,10 @@ function TabNavigator() {
       },
     })}
     tabBarOptions={{
-      activeTintColor: 'tomato',
+      activeTintColor: 'black',
       inactiveTintColor: 'gray',
+      activeBackgroundColor: '#f4b244',
+      inactiveBackgroundColor: '#f4b244'
     }}>
       <Tab.Screen name="Now Playing" component={NowPlaying}/>
       <Tab.Screen name="Top Rated" component={TopRated} />

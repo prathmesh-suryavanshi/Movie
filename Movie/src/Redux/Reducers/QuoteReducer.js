@@ -3,7 +3,7 @@ Filename: QuoteReducer
 Description: Top rated movie listing
 */
 const initialState={
-    quote: "initialState",
+    quote: '',
     isLoading: false,
     error: '',
     statuCode: 0,

@@ -9,8 +9,8 @@ import * as MoviesActions from '../Redux/Actions/MoviesActions'
 import { SearchBar } from 'react-native-elements';
 import _ from "lodash";
 import { getMovies, contains } from "../Shared/Search";
-import {styles } from '../Shared/GlobalCSS';
-import {renderSeparator} from "../Shared/CommonComponents"
+import { styles } from '../Shared/GlobalCSS';
+import { renderSeparator } from "../Shared/CommonComponents"
 
 class NowPlaying extends Component {
   //Constructor
@@ -18,20 +18,25 @@ class NowPlaying extends Component {
     super(props);
     this.state = {
       query: "",
-      fullData: this.props.quote,
-      movies: this.props.quote
+      movies: '',
+      isDelete: false
     };
+
   }
+  
 
   //ComponentDidMount
-  componentDidMount() {
+   componentDidMount() {
     this.props.loadMovie()
-    this.setState({fullData : this.props.quote})
+    const data = this.props.quote
+    console.log("here is dat", data)
 
-  } 
- //Render
-   render() {
-    if (this.props.quote.length > 0 && this.props.statusCode != undefined && this.state.query.length == 0) {
+    this.setState({movies: data})
+  }
+
+  //Render
+  render() {
+    if (this.props.statusCode != undefined && this.state.query.length == 0 && this.state.isDelete == false) {
       return (
         this.props.isloading ? <ActivityIndicator /> : <View style={styles.container}>
           <FlatList
@@ -44,7 +49,7 @@ class NowPlaying extends Component {
           />
         </View>
       )
-    } else if (this.state.query.length > 0 ) {
+    } else if (this.state.query.length > 0 || this.state.isDelete) {
       return (
         this.props.isloading ? <ActivityIndicator /> : <View style={styles.container}>
           <FlatList
@@ -57,17 +62,31 @@ class NowPlaying extends Component {
           />
         </View>
       )
-    } else {return(
-      <ActivityIndicator />
-    ) 
+    } else {
+      return (
+        <ActivityIndicator />
+      )
     }
   }
+
+
+  deleteItemById = id => {
+    console.log("here are movie", this.state.movies)
+    if (this.state.movies) {
+      const filteredData = this.state.movies.filter(item => item.id !== id);
+      this.setState({ movies: filteredData });
+    } else {
+      const filteredData = this.props.quote.filter(item => item.id !== id);
+      this.setState({ movies: filteredData });
+    }
+  } 
+
 
   //Searchbar header
   renderHeader = () => {
     return <SearchBar placeholder="Type Here..." lightTheme round
       inputContainerStyle={styles.inputStyle}
-      containerStyle={styles.containerStyle} onChangeText={this.handleSearch} value={this.state.query} />;
+      containerStyle={styles.containerStyle} onChangeText={this.handleSearch} value={this.state.query} onCancel={this.clearText} />;
   };
 
   renderItem = ({ item, index }) => {
@@ -85,12 +104,21 @@ class NowPlaying extends Component {
           <View style={styles.headView}>
             <Text numberOfLines={1} style={styles.headingText}>{item.original_title}</Text>
             <Text numberOfLines={5} style={styles.des}>{item.overview}</Text>
+            <TouchableOpacity onPress={() => {this.deleteItemById(item.id), this.setState({isDelete: true})}}>
+            <View style={{backgroundColor:'black', alignSelf:'flex-end', marginEnd:10, marginTop: 10}}>
+              <Text style={{fontSize:14, fontWeight: 'bold', padding:4, color:'#fff'}}>Delete</Text>
+            </View>
+            </TouchableOpacity>
+
           </View>
         </View>
       </TouchableOpacity>
     )
   }
-
+  //Clear Text
+  clearText = () => {
+    this.setState({ query: '' })
+  }
   //On Search
   handleSearch = text => {
     const formattedQuery = text
@@ -100,9 +128,9 @@ class NowPlaying extends Component {
     this.setState({ query: formattedQuery, data }, () => this.makeRemoteRequest());
   };
 
- //Search Request
+  //Search Request
   makeRemoteRequest = () => {
-    if (this.state.query.length > 0 && this.state.fullData != undefined) {
+    if (this.state.query.length > 0 ) {
       getMovies(this.props.quote, this.state.query)
         .then(movies => {
           this.setState({
@@ -122,8 +150,6 @@ class NowPlaying extends Component {
 
 //Mapping State to props
 function mapStateToProps(state) {
-  console.log('resolve', state.statusCode, state.quote)
-
   return {
     quote: state.quote,
     isloading: state.isloading,

@@ -19,20 +19,21 @@ class TopRated extends Component {
     this.state = {
       query: "",
       fullData: this.props.quote,
-      movies: this.props.quote
+      movies: this.props.quote,
+      isDelete: false
     };
   }
 
   //ComponentDidMount
   componentDidMount() {
     this.props.loadMovie()
-    this.setState({ fullData: this.props.quote })
+    this.setState({movies: this.props.quote})
 
   }
 
   //Render
   render() {
-    if (this.props.statusCode != undefined && this.state.query.length == 0) {
+    if (this.props.statusCode != undefined && this.state.query.length == 0 && this.state.isDelete == false) {
       return (
         this.props.isloading ? <ActivityIndicator /> : <View style={styles.container}>
           <FlatList
@@ -45,7 +46,7 @@ class TopRated extends Component {
           />
         </View>
       )
-    } else if (this.state.query.length > 0) {
+    } else if (this.state.query.length > 0 || this.state.isDelete) {
       return (
         this.props.isloading ? <ActivityIndicator /> : <View style={styles.container}>
           <FlatList
@@ -70,8 +71,24 @@ class TopRated extends Component {
   renderHeader = () => {
     return <SearchBar placeholder="Type Here..." lightTheme round
       inputContainerStyle={styles.inputStyle}
-      containerStyle={styles.containerStyle} onChangeText={this.handleSearch} value={this.state.query} />;
+      containerStyle={styles.containerStyle} onChangeText={this.handleSearch} value={this.state.query} onCancel={this.clearText} />;
   };
+
+  deleteItemById = id => {
+    console.log("here are movie", this.state.movies)
+    if (this.state.movies) {
+      const filteredData = this.state.movies.filter(item => item.id !== id);
+      this.setState({ movies: filteredData });
+    } else {
+      const filteredData = this.props.quote.filter(item => item.id !== id);
+      this.setState({ movies: filteredData });
+    }
+  } 
+
+  //Clear Text
+  clearText = () => {
+    this.setState({ query: '' })
+  }
 
   //On Search
   handleSearch = text => {
@@ -97,10 +114,16 @@ class TopRated extends Component {
           <View style={styles.headView}>
             <Text numberOfLines={1} style={styles.headingText}>{item.original_title}</Text>
             <Text numberOfLines={5} style={styles.des}>{item.overview}</Text>
+            <TouchableOpacity onPress={() => {this.deleteItemById(item.id), this.setState({isDelete: true})}}>
+            <View style={{backgroundColor:'black', alignSelf:'flex-end', marginEnd:10, marginTop: 10}}>
+              <Text style={{fontSize:14, fontWeight: 'bold', padding:4, color:'#fff'}}>Delete</Text>
+            </View>
+            </TouchableOpacity>
           </View>
         </View>
       </TouchableOpacity>
-    )}
+    )
+  }
 
   //Search Request
   makeRemoteRequest = () => {
